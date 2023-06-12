@@ -1,4 +1,4 @@
-import { DeclarativeEnvironmentRecord, EnvironmentRecord, FunctionEnvironmentRecord, ObjectEnvironmentRecord } from './Environment Records'
+import { DeclarativeEnvironmentRecord, EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord, ObjectEnvironmentRecord } from './Environment Records'
 
 class ReferenceRecord {
   constructor(
@@ -49,3 +49,23 @@ function newFunctionEnvironment(
   return env
 }
 
+function newGlobalEnvironment(g: Object, thisValue: any) {
+  let objRec = newObjectEnvironment(g , false , null)
+  let decRec = newDeclarativeEnvironment(null)
+  let env = new GlobalEnvironmentRecord()
+
+  env.objectRecord = objRec
+  env.declarativeRecord = decRec
+  env.globalThisValue = thisValue
+  env.varNames = []
+  env.outerEnv = null
+
+  return env
+}
+
+export {
+  newDeclarativeEnvironment,
+  newObjectEnvironment,
+  newFunctionEnvironment,
+  newGlobalEnvironment
+}
