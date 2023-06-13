@@ -1,3 +1,4 @@
+import { FunctionObject } from '../Closure Comprehension/Function Object'
 import { DeclarativeEnvironmentRecord, EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord, ObjectEnvironmentRecord } from './Environment Records'
 
 class ReferenceRecord {
@@ -35,7 +36,7 @@ function newObjectEnvironment(o: Object , w: boolean , e: EnvironmentRecord | nu
 }
 
 function newFunctionEnvironment(
-    f: Function & {homeObject: {getPrototypeOf: Function} , thisMode: 'lexical' | string , environment: EnvironmentRecord} , 
+    f: FunctionObject, 
     newTarget: Object | undefined
   ) {
   let env = new FunctionEnvironmentRecord

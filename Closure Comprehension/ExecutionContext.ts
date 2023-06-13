@@ -1,10 +1,18 @@
+import { EnvironmentRecord, PrivateEnvironmentRecord } from "../Environment Records/Environment Records"
+import { FunctionObject } from "./Function Object"
 import { RealmRecord } from "./Realm"
 
 class ExecutionContext {
-    codeEvaluationState: any // for async function and generator to suspend executionContext
-    function: Function | null | undefined   
+    codeEvaluationState: any // for async function and generator to suspend and resume executionContext
+    function: FunctionObject | null | undefined   
     realm: RealmRecord
     scriptOrModule: any
+}
+
+class ECMAScriptCodeExecutionContext extends ExecutionContext{
+    lexicalEnvironment: EnvironmentRecord
+    variableEnvironment: EnvironmentRecord
+    privateEnvironment: PrivateEnvironmentRecord | null
 }
 
 class ExecutionContextStack {
@@ -31,5 +39,6 @@ class ExecutionContextStack {
 
 export {
     ExecutionContext,
-    ExecutionContextStack
+    ExecutionContextStack,
+    ECMAScriptCodeExecutionContext
 }

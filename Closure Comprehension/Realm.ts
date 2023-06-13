@@ -1,9 +1,8 @@
 import { GlobalEnvironmentRecord } from "../Environment Records/Environment Records"
 import { ExecutionContext } from "./ExecutionContext"
-import { Agent } from './Agent'
+import { agent } from './Agent'
 import { newGlobalEnvironment } from "../Environment Records/Environment Record Operations"
 
-const agent = new Agent()
 
 class RealmRecord {
     intrinsics: any
@@ -19,6 +18,11 @@ function initializeHostDefinedRealm() {
     
     newContext.function = null
     newContext.scriptOrModule = null
+    /*
+        This Execution Context is created by base class ExecutionContext,
+        and it do not have environment record fields,
+        but it has a realm field which own a globalEnv. 
+    */
     newContext.realm = realm
     
     agent.executionContextStack.push(newContext)
@@ -28,6 +32,7 @@ function initializeHostDefinedRealm() {
 
     setRealmGlobalObject(realm , global , thisValue)
 
+    // ??
     let globalObj = setDefaultGlobalBinding(realm)
 
 }

@@ -1,3 +1,5 @@
+import { FunctionObject } from "../Closure Comprehension/Function Object"
+
 abstract class EnvironmentRecord {
   outerEnv: EnvironmentRecord | null
 
@@ -338,7 +340,7 @@ class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
   // If the value is lexical, this is an ArrowFunction and does not have a local this value.
   thisBindingStatus: 'lexical' | 'initialized' | 'uninitialized'
 
-  functionObject: Function & {homeObject: {getPrototypeOf: Function} }
+  functionObject: FunctionObject
   
   // The field is determined by whether the environment record is created by [[Construct]].
   newTarget: Object | undefined
@@ -378,6 +380,9 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   outerEnv: GlobalEnvironmentRecord
 }
 
+class PrivateEnvironmentRecord {
+  // ...
+}
 
 export {
   EnvironmentRecord,
@@ -385,5 +390,6 @@ export {
   ObjectEnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
-  ModuleEnvironmentRecord
+  ModuleEnvironmentRecord,
+  PrivateEnvironmentRecord
 }

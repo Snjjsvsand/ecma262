@@ -6,6 +6,8 @@ class Agent {
     executionContextStack: ExecutionContextStack
 }
 
+const agent = new Agent()
+
 export {
-    Agent
+    agent
 } 
