@@ -30,11 +30,11 @@ function initializeHostDefinedRealm() {
 
     let global = globalThis , thisValue = globalThis
 
+    // create host-defined global object such as window.
     setRealmGlobalObject(realm , global , thisValue)
 
-    // ??
+    // ?? 
     let globalObj = setDefaultGlobalBinding(realm)
-
 }
 
 function createIntrinsics(realmRec: RealmRecord) {

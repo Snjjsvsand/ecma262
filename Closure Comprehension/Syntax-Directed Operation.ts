@@ -41,12 +41,12 @@ function varDeclaredNames(script) {
   return topLevelVarDeclaredNames(script)
 }
 
-function lexicallyScopedDeclarations() {
+function lexicallyScopedDeclarations(arg?: string) {
   // Same as lexicallyDeclaredNames , but return a list of parse nodes.
   return []
 }
 
-function varScopedDeclaration(arg?: string ) {
+function varScopedDeclaration(arg?: string) {
   // Same as varDeclaredNames , but return a list of parse nodes.
   return []
 }

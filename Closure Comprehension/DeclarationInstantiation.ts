@@ -1,4 +1,5 @@
-import { GlobalEnvironmentRecord } from "../Environment Records/Environment Records";
+import { newDeclarativeEnvironment } from "../Environment Records/Environment Record Operations";
+import { DeclarativeEnvironmentRecord, EnvironmentRecord, GlobalEnvironmentRecord } from "../Environment Records/Environment Records";
 import { agent } from "./Agent";
 import { ECMAScriptCodeExecutionContext } from "./ExecutionContext";
 import { FunctionObject, instantiateFunctionObject } from "./Function Object";
@@ -61,6 +62,15 @@ function globalDeclarationInstantiation(script: any , env: GlobalEnvironmentReco
   }
 }
 
+function hasDuplicatesFunc(arr: string[]) {
+  let bag = new Set()
+  for(let i = 0; i < arr.length; i++) {
+    if(bag.has(arr[i])) return true
+    bag.add(arr[i])
+  }
+  return false
+}
+
 function functionDeclarationInstantiation(func: FunctionObject , argumentList: Array<any>) {
   let calleeContext = agent.runningExecutionContext as ECMAScriptCodeExecutionContext
   let code = func.ECMAScriptCode // parsed Node
@@ -68,7 +78,8 @@ function functionDeclarationInstantiation(func: FunctionObject , argumentList: A
   let formals = func.formalParameters
   // return BoundNames of formals
   let parameterNames = formals.map(item => String(item))
-
+  // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
+  let hasDuplicates: Boolean = hasDuplicatesFunc(parameterNames)
   // 7. Let simpleParameterList be IsSimpleParameterList of formals.
   let simpleParameterList = Boolean(formals)
   // 8. Let hasParameterExpressions be ContainsExpression of formals.
@@ -88,14 +99,85 @@ function functionDeclarationInstantiation(func: FunctionObject , argumentList: A
     functionsToInitialize.unshift(d)
   }
 
-  let argumentsObjectNeeded = true
-  if(func.thisMode === 'lexical') argumentsObjectNeeded = false
-  else if(parameterNames.includes('arguments')) argumentsObjectNeeded = false
-  else if(hasParameterExpressions === false && lexicalNames.includes('arguments'))  argumentsObjectNeeded = false
+  // omit 15 - 18 about argumentsObjectNeeded
 
-  let env
+  let env: EnvironmentRecord
 
   if(strict || !hasParameterExpressions) env = calleeContext.lexicalEnvironment
+  else {
+    let calleeEnv = calleeContext.lexicalEnvironment
+    env = newDeclarativeEnvironment(calleeEnv)
+    // assert calleeContext.lexicalEnvironment === calleeContext.variableEnvironment === calleeEnv
+
+    calleeContext.lexicalEnvironment = env
+  }
+
+  // omit 21 - 26 about parameter binding and initialization in env Environment Record.
+  let parameterBindings = ['binded and initialized parameters']
+  
+
+  let varEnv: EnvironmentRecord
+
+  if(hasParameterExpressions) {
+    let instantiatedVarNames = parameterBindings
+
+    for(let n in varNames) {
+      if(!instantiatedVarNames.includes(n)) {
+        instantiatedVarNames.push(n)
+        env.createMutableBinding(n , false)
+        env.initializeBinding(n , undefined)
+      }
+    }
+    varEnv = env
+
+  }else {
+    let instantiatedVarNames: string[] = []
+    varEnv = newDeclarativeEnvironment(env)
+    calleeContext.variableEnvironment = varEnv
+
+    for(let n in varNames) {
+      if(!instantiatedVarNames.includes(n)) {
+        instantiatedVarNames.push(n)
+        varEnv.createMutableBinding(n , false)
+
+        // NOTE: A var with the same name as a formal parameter initially has the same value as the corresponding initialized parameter.
+        let initialValue
+        if(!parameterBindings.includes(n) || functionNames.includes(n)) initialValue = undefined
+        else initialValue = env.getBindingValue(n , false)
+
+        varEnv.initializeBinding(n , initialValue)
+      }
+    }
+  }
+
+  // omit B.3.2.1 addition
+  
+  let lexEnv: EnvironmentRecord
+  
+  if(strict === false) lexEnv = newDeclarativeEnvironment(varEnv)
+  else lexEnv = varEnv
+
+  calleeContext.lexicalEnvironment = lexEnv
+
+  let lexDeclarations = lexicallyScopedDeclarations(code)
+
+  for(let d of lexDeclarations) {
+    // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal parameter, or a var name.
+    // Lexically declared names are only instantiated here but not initialized.
+    if('IsConstDeclaration') lexEnv.createImmutableBinding(d , true)
+    else lexEnv.createMutableBinding(d , false) 
+  }
+
+  let privateEnv = calleeContext.privateEnvironment
+
+  /*
+    This step contains partial core of closure,
+    the new function object has a environment field point to lexEnv which belongs to calleeContext.
+  */
+  for(let f of functionsToInitialize) {
+    let fo = instantiateFunctionObject(lexEnv , privateEnv)
+    varEnv.setMutableBinding(f , fo , false)
+  }
 
 }
 
