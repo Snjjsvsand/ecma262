@@ -1,6 +1,8 @@
 import { GlobalEnvironmentRecord } from "../Environment Records/Environment Records";
-import { instantiateFunctionObject } from "./Function Object";
-import { lexicallyDeclaredNames, lexicallyScopedDeclarations, varDeclaredDeclatations, varDeclaredNames } from "./Syntax-Directed Operation";
+import { agent } from "./Agent";
+import { ECMAScriptCodeExecutionContext } from "./ExecutionContext";
+import { FunctionObject, instantiateFunctionObject } from "./Function Object";
+import { lexicallyDeclaredNames, lexicallyScopedDeclarations , varDeclaredNames, varScopedDeclaration } from "./Syntax-Directed Operation";
 
 function globalDeclarationInstantiation(script: any , env: GlobalEnvironmentRecord) {
   let lexNames = lexicallyDeclaredNames(script)
@@ -16,7 +18,7 @@ function globalDeclarationInstantiation(script: any , env: GlobalEnvironmentReco
     if(env.hasLexicalDeclaration(name)) throw new SyntaxError()
   }
 
-  let varDeclarations = varDeclaredDeclatations()
+  let varDeclarations = varScopedDeclaration()
   let functionsToInitialize = []
   let declaredFunctionNames = []
 
@@ -59,6 +61,45 @@ function globalDeclarationInstantiation(script: any , env: GlobalEnvironmentReco
   }
 }
 
+function functionDeclarationInstantiation(func: FunctionObject , argumentList: Array<any>) {
+  let calleeContext = agent.runningExecutionContext as ECMAScriptCodeExecutionContext
+  let code = func.ECMAScriptCode // parsed Node
+  let strict = func.strict
+  let formals = func.formalParameters
+  // return BoundNames of formals
+  let parameterNames = formals.map(item => String(item))
+
+  // 7. Let simpleParameterList be IsSimpleParameterList of formals.
+  let simpleParameterList = Boolean(formals)
+  // 8. Let hasParameterExpressions be ContainsExpression of formals.
+  let hasParameterExpressions = Boolean(formals)
+
+  let varNames = varDeclaredNames(code)
+  let varDeclarations = varScopedDeclaration(code)
+  let lexicalNames: Array<string> = lexicallyDeclaredNames(code)
+  let functionNames: Array<string> = []
+  let functionsToInitialize = []
+
+  for(let d of varDeclarations) {
+    // If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier,
+    // d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+    let fn = String(d)
+    functionNames.unshift(fn)
+    functionsToInitialize.unshift(d)
+  }
+
+  let argumentsObjectNeeded = true
+  if(func.thisMode === 'lexical') argumentsObjectNeeded = false
+  else if(parameterNames.includes('arguments')) argumentsObjectNeeded = false
+  else if(hasParameterExpressions === false && lexicalNames.includes('arguments'))  argumentsObjectNeeded = false
+
+  let env
+
+  if(strict || !hasParameterExpressions) env = calleeContext.lexicalEnvironment
+
+}
+
 export {
-  globalDeclarationInstantiation
+  globalDeclarationInstantiation,
+  functionDeclarationInstantiation
 }

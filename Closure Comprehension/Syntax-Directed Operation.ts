@@ -46,7 +46,7 @@ function lexicallyScopedDeclarations() {
   return []
 }
 
-function varDeclaredDeclatations() {
+function varScopedDeclaration(arg?: string ) {
   // Same as varDeclaredNames , but return a list of parse nodes.
   return []
 }
@@ -55,5 +55,5 @@ export {
   lexicallyDeclaredNames,
   varDeclaredNames,
   lexicallyScopedDeclarations,
-  varDeclaredDeclatations
+  varScopedDeclaration
 }

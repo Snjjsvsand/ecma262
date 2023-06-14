@@ -39,7 +39,7 @@ function newFunctionEnvironment(
     f: FunctionObject, 
     newTarget: Object | undefined
   ) {
-  let env = new FunctionEnvironmentRecord
+  let env = new FunctionEnvironmentRecord()
   env.functionObject = f
   if(f.thisMode === 'lexical') env.thisBindingStatus = 'lexical'
   else env.thisBindingStatus = 'uninitialized'

@@ -9,7 +9,7 @@ class FunctionObject {
   call: Function
   sourceText: String
   formalParameters: Array<any>
-  ECMAScriptCode: String
+  ECMAScriptCode: string
   strict: Boolean
   thisMode: 'lexical' | 'strict' | 'global'
   isClassConstructor: Boolean
@@ -35,6 +35,18 @@ function prepareForOrdinaryCall(f: FunctionObject , newTarget: any) {
   calleeContext.realm = f.realm
   calleeContext.scriptOrModule = f.scriptOrModule
 
+
+  /*
+    This step contains partial core of closure，
+    this new local environment's outerEnv is a pointer to function object's environment
+    where the function object instantiated.
+
+    newFunctionEnvironment(f: FunctionObject , newTarget: any) {
+      ...
+      let env = new FunctionEnvironmentRecord()
+      env.outerEnv = f.environment
+    }
+  */
   let localEnv = newFunctionEnvironment(f , newTarget)
 
   calleeContext.lexicalEnvironment = localEnv
