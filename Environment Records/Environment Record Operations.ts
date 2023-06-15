@@ -68,5 +68,6 @@ export {
   newDeclarativeEnvironment,
   newObjectEnvironment,
   newFunctionEnvironment,
-  newGlobalEnvironment
+  newGlobalEnvironment,
+  getIdentifierReference
 }

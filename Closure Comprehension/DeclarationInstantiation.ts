@@ -118,7 +118,7 @@ function functionDeclarationInstantiation(func: FunctionObject , argumentList: A
 
   let varEnv: EnvironmentRecord
 
-  if(hasParameterExpressions) {
+  if(!hasParameterExpressions) {
     let instantiatedVarNames = parameterBindings
 
     for(let n in varNames) {
@@ -129,7 +129,6 @@ function functionDeclarationInstantiation(func: FunctionObject , argumentList: A
       }
     }
     varEnv = env
-
   }else {
     let instantiatedVarNames: string[] = []
     varEnv = newDeclarativeEnvironment(env)

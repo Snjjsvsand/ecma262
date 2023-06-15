@@ -3,6 +3,7 @@ import { newFunctionEnvironment } from "../Environment Records/Environment Recor
 import { ECMAScriptCodeExecutionContext } from "./ExecutionContext";
 import { RealmRecord } from "./Realm";
 import { agent } from "./Agent";
+import { functionDeclarationInstantiation } from "./DeclarationInstantiation";
 
 
 class FunctionObject {
@@ -154,7 +155,8 @@ function ordinaryCallBindThis(f: FunctionObject, calleeContext: ECMAScriptCodeEx
 } 
 
 function ordinaryCallEvaluationBody(f: FunctionObject, argumentList: any) {
-  throw new Error("Function not implemented.");
+  functionDeclarationInstantiation(f , argumentList)
+  //Return ?Evaluation of FunctionStatementList.
 }
 
 
