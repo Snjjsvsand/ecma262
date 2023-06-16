@@ -1,4 +1,6 @@
+import { getIdentifierReference } from "../Environment Records/Environment Record Operations"
 import { EnvironmentRecord, PrivateEnvironmentRecord } from "../Environment Records/Environment Records"
+import { agent } from "./Agent"
 import { FunctionObject } from "./Function Object"
 import { RealmRecord } from "./Realm"
 
@@ -36,6 +38,11 @@ class ExecutionContextStack {
     }
 }
 
+function resolveBinding(name , env: EnvironmentRecord | undefined) {
+    if(env === undefined) env = (agent.runningExecutionContext as ECMAScriptCodeExecutionContext).lexicalEnvironment
+    // 3. If the source text matched by the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
+    return getIdentifierReference(env , name , Boolean())
+}
 
 export {
     ExecutionContext,

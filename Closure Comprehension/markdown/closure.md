@@ -13,7 +13,7 @@
 
 在各种声明实例化过程中遇到函数声明语句时： function func( ... ) { ... },
 1. 全局声明实例化过程中 (globalDeclarationInstantiation)：
-  创建函数实例对象 (function object) , 并将此对象的 enviroment 指向全局环境记录对象 globalEnv。
+  创建函数实例对象 (function object) , 并将此对象的 environment 指向全局环境记录对象 globalEnv。
 2. 函数声明实例化过程中 (functionDeclarationInstantiation)：
   创建函数实例对象 ，将此对象的 environment 指向正在实例化函数的执行上下文(calleeContext)的词法环境(lexicalEnvironment)，这样做使得 environment 一直存在于内存中，并这是闭包生成的根本原因；而当该函数实例对象被调用时，会创建新的执行上下文与新的词法环境，这个新的词法环境的 outerEnv 正是指向函数实例的 environment , 确定了标识符解析的作用域链。
 

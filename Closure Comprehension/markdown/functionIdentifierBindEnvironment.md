@@ -1,18 +1,22 @@
 ## 函数调用中词法/变量环境引用关系
 
-#### prepareForOrdinaryCall 创建新的执行上下文并推入执行栈顶
+### 函数调用执行流程
+
+#### 1. prepareForOrdinaryCall 创建新的执行上下文并推入执行栈顶
+
 ```js
 let calleeContext = new ECMAScriptCodeExecutionContext() 
 ```
 
-  ##### 创建新的函数式环境（下称 funcEnv）并让执行上下文的词法与变量环境都指向此环境记录
+创建新的函数式环境（下称 funcEnv）并让执行上下文的词法与变量环境都指向此环境记录
+
 ```js
 let localEnv = newFunctionEnvironment(f , newTarget)
 calleeContext.lexicalEnvironment = localEnv
 calleeContext.variableEnvironment = localEnv
 ```
 
-  在创建函数环境时，新的环境函数的 outerEnv 指向函数实例生成时所在的执行上下文的词法环境:
+  在创建函数环境时，新的环境函数的 outerEnv 指向函数实例生成时所在的执行上下文的词法环境
 ```js
 function newFunctionEnvironment(f: FunctionObject , newTarget: any) {
   ...
@@ -23,7 +27,7 @@ function newFunctionEnvironment(f: FunctionObject , newTarget: any) {
 }
 ```
 
-#### functionDeclarationInstantiation 进行函数声明实例化
+#### 2. functionDeclarationInstantiation 进行函数声明实例化
   1. 绑定函数形参环境至环境(下称 env)并实例化 
 
 ```js
@@ -91,28 +95,62 @@ function ordinaryFunctionCreate(... , env , ...) {
 }
 ```
 
-#### 开始执行函数体内语句
+#### 3. 开始执行函数体内语句
+此时正在执行上下文为 `calleeContext`,
+
+变量环境：`varEnv == calleeContext.variableEnvironment`
+词法环境：`lexEnv == calleeContext.lexicalEnvironment` 
+
 
 
 ## 函数调用过程中各种环境依赖情况
 1. 严格模式，函数参数没有默认值
-env == funcEnv
-varEnv == env
-lexEnv == varEnv
+  `env == funcEnv`
+  `varEnv == env`
+  `lexEnv == varEnv`
 
 2. 严格模式，函数参数有默认值
-env == funcEnv
-varEnv.outerEnv == env
-lexEnv == varEnv
+  `env == funcEnv`
+  `varEnv.outerEnv == env`
+  `lexEnv == varEnv`
 
 3. 非严格模式，函数参数没有默认值
-env == funcEnv
-varEnv == env
-lexEnv.outerEnv == varEnv
+  `env == funcEnv`
+  `varEnv == env`
+  `lexEnv.outerEnv == varEnv`
 
 4. 非严格模式，函数参数有默认值
-env.outerEnv == funcEnv
-varEnv.outerEnv == env
-lexEnv.outerEnv == varEnv
+  `env.outerEnv == funcEnv`
+  `varEnv.outerEnv == env`
+  `lexEnv.outerEnv == varEnv`
+
+
+
+## 标识符在作用域上查找过程
+1. 调用 resolveBinding 并传入标识符名称
+2. 如果调用 resolveBinding 时没有传入特定的 词法/语法环境 ， 则标识符的查找会从正在执行上下文的词法环境开始
+    
+    ```js
+    if(env === undefined) env = agent.runningExecutionContext.lexicalEnvironment
+    ```
+3. resolveBinding 会在确定好是否是严格模式后，调用 getIdentifierReference(name , env , strict) 抽象方法
+4. getIdentifierReference 方法会递归的调用自身以判断 env 及其 outerEnv 中是否有该标识符绑定，
+    如果有则返回该环境，如果查找到链条末尾都没有找到则返回 unresolvable 记录。
+    
+    ```js
+    function getIdentifierReference(env: EnvironmentRecord | null, name: string , strict: boolean) {
+      if(env === null) return new ReferenceRecord('unresolvable' , name , strict , null)
+    
+      let exists = env.hasBinding(name)
+      if(exists) return new ReferenceRecord(env , name , strict , null)
+    
+      return getIdentifierReference(env.outerEnv , name , strict)
+    }
+    ```
+5. 整个查找过程并没有直接使用 变量环境（VariableEnvironment） , 但是由于在各种声明实例化过程中，变量环境要么与词法环境指向
+    的是同一个环境记录，要么词法环境的 outerEnv 指向的就是变量环境，所以其实变量环境会被隐式的使用到。
+
+
+
 
 
