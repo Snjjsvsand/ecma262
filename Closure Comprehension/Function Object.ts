@@ -8,6 +8,8 @@ import { functionDeclarationInstantiation } from "./DeclarationInstantiation";
 
 class FunctionObject {
   call: Function
+  construct: Object
+  constructorKind: 'base' | 'derived'
   sourceText: String
   formalParameters: Array<any>
   ECMAScriptCode: string
@@ -18,14 +20,42 @@ class FunctionObject {
   privateEnvironment: PrivateEnvironmentRecord | null
   scriptOrModule: any
   realm: RealmRecord
-  homeObject: undefined
   fields: Array<any>
   privateMethod: Array<any>
   classFieldInitializerName: any
   length: number
   name: string
+  
+  ['[[Prototype]]']: any
+  homeObject: Object | undefined
 
-  constructor(proto) { }
+  constructor(proto) {
+    this['[[Prototype]]'] = proto
+  }
+}
+
+
+
+function call(thisArgument , argumentList) {
+  let f = this as FunctionObject
+  let callerContext = agent.runningExecutionContext
+  
+  // Now calleeContext is the running execution context.
+  let calleeContext = prepareForOrdinaryCall(f , undefined)
+
+  if(f.isClassConstructor) {
+    // ...
+  }
+
+  ordinaryCallBindThis(f , calleeContext , thisArgument)
+
+  let result = ordinaryCallEvaluationBody(f , argumentList) as any
+
+  agent.executionContextStack.pop()
+  agent.executionContextStack.push(callerContext)
+  agent.runningExecutionContext = callerContext
+
+  if(result.value) return result.value
 }
 
 function prepareForOrdinaryCall(f: FunctionObject , newTarget: any) {
@@ -60,29 +90,6 @@ function prepareForOrdinaryCall(f: FunctionObject , newTarget: any) {
   return calleeContext
 }
 
-
-function call(thisArgument , argumentList) {
-  let f = this as FunctionObject
-  let callerContext = agent.runningExecutionContext
-  
-  // Now calleeContext is the running execution context.
-  let calleeContext = prepareForOrdinaryCall(f , undefined)
-
-  if(f.isClassConstructor) {
-    // ...
-  }
-
-  ordinaryCallBindThis(f , calleeContext , thisArgument)
-
-  let result = ordinaryCallEvaluationBody(f , argumentList) as any
-
-  agent.executionContextStack.pop()
-  agent.executionContextStack.push(callerContext)
-  agent.runningExecutionContext = callerContext
-
-  if(result.value) return result.value
-}
-
 function ordinaryFunctionCreate(functionPrototype , sourceText , parameterList , body: string , thisMode , env , privateEnv) {
   let f = new FunctionObject(functionPrototype)
   f.call = call
@@ -92,6 +99,7 @@ function ordinaryFunctionCreate(functionPrototype , sourceText , parameterList ,
   let strict = body.includes('use strict')
   f.strict = strict
   
+  // thisMode 
   if(thisMode === 'lexical') f.thisMode = 'lexical'
   else if (strict) f.thisMode = 'strict'
   else f.thisMode = 'global'
@@ -112,7 +120,7 @@ function ordinaryFunctionCreate(functionPrototype , sourceText , parameterList ,
   return f
 }
 
-function instantiateOrdinaryFunctionObject(env: EnvironmentRecord , privateEnv: PrivateEnvironmentRecord | null) {
+function instantiateOrdinaryFunctionObject(env: EnvironmentRecord , privateEnv: PrivateEnvironmentRecord | null): FunctionObject {
   let name = 'functionName'
   let sourceText = 'functtion functionName(function parameters) {function Code}'
   let f = ordinaryFunctionCreate(
@@ -162,5 +170,8 @@ function ordinaryCallEvaluationBody(f: FunctionObject, argumentList: any) {
 
 export {
   FunctionObject,
-  instantiateFunctionObject
+  instantiateFunctionObject,
+  ordinaryFunctionCreate,
+  prepareForOrdinaryCall,
+  call
 }

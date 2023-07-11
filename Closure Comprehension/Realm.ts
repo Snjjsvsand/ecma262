@@ -35,6 +35,8 @@ function initializeHostDefinedRealm() {
 
     // ?? 
     let globalObj = setDefaultGlobalBinding(realm)
+
+    return realm
 }
 
 function createIntrinsics(realmRec: RealmRecord) {
@@ -75,6 +77,7 @@ function setDefaultGlobalBinding(realmRec: RealmRecord) {
 }
 
 export {
-    RealmRecord
+    RealmRecord,
+    initializeHostDefinedRealm
 }
 

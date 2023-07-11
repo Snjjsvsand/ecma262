@@ -1,9 +1,9 @@
 import { FunctionObject } from '../Closure Comprehension/Function Object'
-import { DeclarativeEnvironmentRecord, EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord, ObjectEnvironmentRecord } from './Environment Records'
+import { DeclarativeEnvironmentRecord, EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord, ObjectEnvironmentRecord, PrivateEnvironmentRecord } from './Environment Records'
 
 class ReferenceRecord {
   constructor(
-    public base: EnvironmentRecord | 'unresolvable',
+    public base: EnvironmentRecord | 'unresolvable' | 'base' | any,
     public referenceName: string,
     public strict: boolean,
     public thisValue: any,
@@ -64,10 +64,31 @@ function newGlobalEnvironment(g: Object, thisValue: any) {
   return env
 }
 
+function newPrivateEnvironment(outerPrivEnv: PrivateEnvironmentRecord | null) {
+  let names = []
+  let env = new PrivateEnvironmentRecord()
+  env.outerPrivateEnvironment = outerPrivEnv, env.names = names
+  return env
+}
+
+function resolvePrivateIdentifier(privEnv: PrivateEnvironmentRecord | null, identifier: string) {
+  if(privEnv === null) return 
+
+  let names = privEnv.names
+  for(let name of names) {
+    if(name === identifier) return name
+  }
+
+  return resolvePrivateIdentifier(privEnv.outerPrivateEnvironment , identifier)
+}
+
 export {
   newDeclarativeEnvironment,
   newObjectEnvironment,
   newFunctionEnvironment,
   newGlobalEnvironment,
-  getIdentifierReference
+  getIdentifierReference,
+  newPrivateEnvironment,
+  resolvePrivateIdentifier,
+  ReferenceRecord
 }

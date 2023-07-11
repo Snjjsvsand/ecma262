@@ -381,7 +381,9 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 }
 
 class PrivateEnvironmentRecord {
-  // ...
+  outerPrivateEnvironment: PrivateEnvironmentRecord | null
+  // 	a List of Private Names , The Private Names declared by this class.
+  names: string[]
 }
 
 export {

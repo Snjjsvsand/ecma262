@@ -38,14 +38,21 @@ class ExecutionContextStack {
     }
 }
 
-function resolveBinding(name , env: EnvironmentRecord | undefined) {
+function resolveBinding(name , env?: EnvironmentRecord) {
     if(env === undefined) env = (agent.runningExecutionContext as ECMAScriptCodeExecutionContext).lexicalEnvironment
     // 3. If the source text matched by the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
     return getIdentifierReference(env , name , Boolean())
 }
 
+function getGlobalObject() {
+    let currentRealm = agent.runningExecutionContext.realm
+    return currentRealm.globalObject
+}
+
 export {
     ExecutionContext,
     ExecutionContextStack,
-    ECMAScriptCodeExecutionContext
+    ECMAScriptCodeExecutionContext,
+    resolveBinding,
+    getGlobalObject
 }
