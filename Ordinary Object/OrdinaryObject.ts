@@ -1,10 +1,11 @@
-import { call } from "../Closure Comprehension/Function Object"
+import { FunctionObject, call, instantiateFunctionObject } from "../Closure Comprehension/Function Object"
+import { Get, makeBasicObject } from "./OperationsOnObjects"
 import { PropertyAttributes } from "./PropertyAttributes"
 
 type PropertyDescriptor = PropertyAttributes
 type PropertyKey = string | number | symbol
 
-class OrdinaryObject {
+export class OrdinaryObject {
     ['[[Prototype]]']: OrdinaryObject | null
     ['[[Extensible]]']: Boolean
 
@@ -46,6 +47,10 @@ class OrdinaryObject {
 
     Delete(p: PropertyKey) {
         return ordinaryDelete(this , p)
+    }
+
+    OwnPropertyKeys() {
+        return ordinaryOwnPropertyKeys(this)
     }
 }
 
@@ -197,7 +202,36 @@ function ordinaryDelete(o: OrdinaryObject , p: PropertyKey) {
     return false
 }
 
-export default {
-    OrdinaryObject
+function ordinaryOwnPropertyKeys(o: OrdinaryObject) {
+    const keys: PropertyKey[] = []
+    for(let k in ['array index' , 'string'  , 'symbol']) keys.push(k)
+    return keys
 }
+
+
+export function ordinaryObjectCreate(proto , additionalInternalSlotsList?): OrdinaryObject & any {
+    let internalSlotsList = ['[[Prototype]]' , '[[Extensible]]']
+    if(additionalInternalSlotsList) internalSlotsList.push(...additionalInternalSlotsList)
+    let o = makeBasicObject(internalSlotsList)
+    o['[[Prototype]]'] = proto
+    return o
+}
+
+export function ordinaryCreateFromConstructor(constructor: FunctionObject , intrinsicDefaultProto: string , internalSlotsList?) {
+    // Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
+    let proto = getPrototypeFromConstructor(constructor , intrinsicDefaultProto)
+    let slotsList = []
+    if(internalSlotsList) slotsList = internalSlotsList
+    return ordinaryObjectCreate(proto , slotsList)
+}
+
+function getPrototypeFromConstructor(constructor: FunctionObject , intrinsicDefaultProto: string) {
+    // Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
+    let proto = Get(constructor , 'prototype')
+    if(typeof proto !== 'object') {
+        proto = constructor.realm[intrinsicDefaultProto]
+    }
+    return proto
+}
+
 
