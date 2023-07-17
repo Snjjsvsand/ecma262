@@ -105,7 +105,7 @@ function isStatic(v: any) {
   return v.static // static a = 123; static func() {}; return true
 }
 
-class ClassFieldDefinitionRecord {
+export class ClassFieldDefinitionRecord {
   name: String
   initializer: FunctionObject
 

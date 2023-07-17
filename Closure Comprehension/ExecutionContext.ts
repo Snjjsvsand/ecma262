@@ -1,12 +1,13 @@
 import { getIdentifierReference } from "../Environment Records/Environment Record Operations"
 import { EnvironmentRecord, PrivateEnvironmentRecord } from "../Environment Records/Environment Records"
 import { agent } from "./Agent"
-import { FunctionObject } from "./Function Object"
+import { FunctionObject as FunctionObjectSimple } from "./Function Object"
+import { FunctionObject } from "../Object/FunctionObject"
 import { RealmRecord } from "./Realm"
 
 class ExecutionContext {
     codeEvaluationState: any // for async function and generator to suspend and resume executionContext
-    function: FunctionObject | null | undefined   
+    function: FunctionObjectSimple | FunctionObject | null | undefined   
     realm: RealmRecord
     scriptOrModule: any
 }

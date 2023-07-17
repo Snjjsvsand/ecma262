@@ -1,4 +1,5 @@
-import { FunctionObject } from '../Closure Comprehension/Function Object'
+import { FunctionObject as FunctionObjectSimple } from '../Closure Comprehension/Function Object'
+import { FunctionObject } from '../Object/FunctionObject'
 import { DeclarativeEnvironmentRecord, EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord, ObjectEnvironmentRecord, PrivateEnvironmentRecord } from './Environment Records'
 
 class ReferenceRecord {
@@ -36,7 +37,7 @@ function newObjectEnvironment(o: Object , w: boolean , e: EnvironmentRecord | nu
 }
 
 function newFunctionEnvironment(
-    f: FunctionObject, 
+    f: FunctionObject | FunctionObjectSimple | any, 
     newTarget: Object | undefined
   ) {
   let env = new FunctionEnvironmentRecord()
