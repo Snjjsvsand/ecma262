@@ -1,8 +1,8 @@
 import { agent } from "../Closure Comprehension/Agent"
 import { ECMAScriptCodeExecutionContext, ExecutionContext, getGlobalObject, resolveBinding } from "../Closure Comprehension/ExecutionContext"
-import { FunctionObject, ordinaryFunctionCreate, prepareForOrdinaryCall } from "../Closure Comprehension/Function Object"
 import { ReferenceRecord, newDeclarativeEnvironment, newPrivateEnvironment } from "../Environment Records/Environment Record Operations"
 import { EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord } from "../Environment Records/Environment Records"
+import { FunctionObject , ordinaryFunctionCreate , prepareForOrdinaryCall } from "../Object/FunctionObject"
 
 function makeBasicObject(internalSlotsList) {
   let obj = new Object()
@@ -20,10 +20,10 @@ function ordinaryObjectCreate(proto , additionalInternalSlotsList = []) {
 }
 
 function ordinaryCallBindThis(f: FunctionObject , calleeContext: ECMAScriptCodeExecutionContext , thisArgument: any) {
-  let thisMode = f.thisMode
+  let thisMode = f["[[ThisMode]]"]
   if(thisMode === 'lexical') return 
 
-  let calleeRealm = f.realm
+  let calleeRealm = f["[[Realm]]"]
   let localEnv = calleeContext.lexicalEnvironment as FunctionEnvironmentRecord
 
   let thisValue
@@ -40,9 +40,9 @@ function ordinaryCallBindThis(f: FunctionObject , calleeContext: ECMAScriptCodeE
   localEnv.bindThisValue(thisValue)
 }
 
-function initializeInstanceElements(o: Object , constructor: FunctionObject) {
+export function initializeInstanceElements(o: Object , constructor: FunctionObject) {
   // omit private methods 
-  let fields = constructor.fields
+  let fields = constructor["[[Fields]]"]
   for(let fieldRecord of fields) {
     defineField(o , fieldRecord)
   }
@@ -131,7 +131,7 @@ function defineField(receiver , fieldRecord: ClassFieldDefinitionRecord) {
   let initValue
 
   if(initializer) {
-    initValue = initializer.call(receiver)
+    initValue = initializer["[[Call]]"](receiver)
   }
   // omit private name
 
@@ -316,10 +316,10 @@ function classDefinitionEvaluation(classBinding: string | undefined , className:
       classPrivateEnvironment
     )
 
-    F.homeObject = proto
-    F.isClassConstructor = true
-    F.name = className
-    F.construct = ''    
+    F["[[HomeObject]]"] = proto
+    F["[[IsClassConstructor]]"] = true
+    F['[[name]]'] = className
+    F["[[Construct]]"] = ''    
   }
 
   Object.defineProperty(F , 'prototype' , {
@@ -329,7 +329,7 @@ function classDefinitionEvaluation(classBinding: string | undefined , className:
     configurable: false
   })
 
-  if('ClassHeritage') F.constructorKind = 'derived'
+  if('ClassHeritage') F["[[ConstructorKind]]"] = 'derived'
   
   Object.defineProperty(proto , 'constructor' , {
     value: F,
@@ -427,7 +427,7 @@ type Constructor = any
 
 function construct(F: FunctionObject , argumentList: string[] , newTarget: Constructor) {
   const callerContext = agent.runningExecutionContext as ECMAScriptCodeExecutionContext
-  let kind = F.constructorKind
+  let kind = F["[[ConstructorKind]]"]
   let thisArgument
 
   if(kind === 'base') thisArgument = ordinaryCreateFromConstructor(newTarget , Object.prototype)

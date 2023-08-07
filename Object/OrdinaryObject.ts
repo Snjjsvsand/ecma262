@@ -217,14 +217,6 @@ export function ordinaryObjectCreate(proto , additionalInternalSlotsList?): Ordi
     return o
 }
 
-export function ordinaryCreateFromConstructor(constructor: FunctionObject , intrinsicDefaultProto: string , internalSlotsList?) {
-    // Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
-    let proto = getPrototypeFromConstructor(constructor , intrinsicDefaultProto)
-    let slotsList = []
-    if(internalSlotsList) slotsList = internalSlotsList
-    return ordinaryObjectCreate(proto , slotsList)
-}
-
 function getPrototypeFromConstructor(constructor: FunctionObject , intrinsicDefaultProto: string) {
     // Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
     let proto = Get(constructor , 'prototype')
@@ -233,5 +225,15 @@ function getPrototypeFromConstructor(constructor: FunctionObject , intrinsicDefa
     }
     return proto
 }
+
+
+export function ordinaryCreateFromConstructor(constructor: FunctionObject , intrinsicDefaultProto: string , internalSlotsList?) {
+    // Assert: intrinsicDefaultProto is this specification's name of an intrinsic object. The corresponding object must be an intrinsic that is intended to be used as the [[Prototype]] value of an object.
+    let proto = getPrototypeFromConstructor(constructor , intrinsicDefaultProto)
+    let slotsList = []
+    if(internalSlotsList) slotsList = internalSlotsList
+    return ordinaryObjectCreate(proto , slotsList)
+}
+
 
 

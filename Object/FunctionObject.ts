@@ -1,10 +1,11 @@
-import { ClassFieldDefinitionRecord } from '../Class Comprehension/Abstract Operation'
+import { ClassFieldDefinitionRecord, initializeInstanceElements } from '../Class Comprehension/Abstract Operation'
 import { agent } from '../Closure Comprehension/Agent'
 import { ECMAScriptCodeExecutionContext, ExecutionContext } from '../Closure Comprehension/ExecutionContext'
 import { RealmRecord } from '../Closure Comprehension/Realm'
 import { newFunctionEnvironment } from '../Environment Records/Environment Record Operations'
 import { EnvironmentRecord, FunctionEnvironmentRecord, GlobalEnvironmentRecord, PrivateEnvironmentRecord } from '../Environment Records/Environment Records'
-import { OrdinaryObject, ordinaryObjectCreate } from './OrdinaryObject'
+import { CompletionRecord } from '../Specification Types'
+import { OrdinaryObject, ordinaryCreateFromConstructor, ordinaryObjectCreate } from './OrdinaryObject'
 
 /*
  !! FunctionObject is not a subclass of OrdinaryObject
@@ -61,7 +62,14 @@ export class FunctionObject extends OrdinaryObject{
 }
 
 
-export function OrdinaryFunctionCreate(functionPrototype , sourceText , parameterList , body , thisMode , env , privateEnv) {
+export function ordinaryFunctionCreate(functionPrototype: Object, 
+    sourceText: string , 
+    parameterList: any[] , 
+    body: string , 
+    thisMode: 'lexical-this' | 'non-lexical-this' , 
+    env: EnvironmentRecord , 
+    privateEnv: PrivateEnvironmentRecord
+): FunctionObject {
     let internalSlotsList = [
         '[[Environment]]',
         '[[PrivateEnvironment]]',
@@ -90,7 +98,7 @@ export function OrdinaryFunctionCreate(functionPrototype , sourceText , paramete
     if(body.includes('use strict')) F['[[Strict]]'] = true
     else F['[[Strict]]'] = false
 
-    if(thisMode === 'lexical') F['[[ThisMode]]'] = 'lexical'
+    if(thisMode === 'lexical-this') F['[[ThisMode]]'] = 'lexical'
     else if(F['[[Strict]]']) F['[[ThisMode]]'] = 'strict'
     else F['[[ThisMode]]'] = 'global'
 
@@ -189,8 +197,56 @@ export function oridnaryCallBindThis(f: FunctionObject , calleeContext: ECMAScri
 
 export function ordinaryCallEvaluateBody(F: FunctionObject , argumentList) {
     //  EvaluateBody of F.[[ECMAScriptCode]] with arguments F and argumentsList.
+    return new CompletionRecord()
 }
 
-export function construct() {
+export function construct(this: FunctionObject , argumentList , newTarget) {
+    let callerContext = agent.runningExecutionContext as ECMAScriptCodeExecutionContext
+    let kind = this['[[ConstructorKind]]']
+    let thisArgument
+    
+    if(kind === 'base') {
+        thisArgument = ordinaryCreateFromConstructor(newTarget , 'Object.prototype')
+    }
+    let calleeContext = prepareForOrdinaryCall(this , newTarget) 
+
+    if(kind === 'base') {
+        oridnaryCallBindThis(this , calleeContext , thisArgument)
+        let initializeResult
+        try {
+            initializeResult = initializeInstanceElements(thisArgument , this)
+        } catch (error) {
+            agent.executionContextStack.pop()
+            agent.runningExecutionContext = callerContext
+            return initializeResult
+        }
+    }
+
+    let constructorEnv = callerContext.lexicalEnvironment as FunctionEnvironmentRecord
+
+    // this step include constructor body statments execution like super()
+    let result = ordinaryCallEvaluateBody(this , argumentList)
+
+    if(result['[[Type]]'] === 'return') {
+        if(typeof result['[[Value]]'] === 'object') return result['[[Value]]']
+        if(kind === 'base') return thisArgument
+        if(result['[[Value]]'] !== undefined) throw new TypeError()
+    }
+
+    let thisBinding = constructorEnv.getThisBinding()
+    // Assert: thisBinding is an Object.
+    return thisBinding
+}
+
+
+function OrdinaryFunctionCreate(
+    functionPrototype: Object, 
+    sourceText: string , 
+    parameterList: any[] , 
+    body: string , 
+    thisMode: 'lexical-this' | 'non-lexical-this' , 
+    env: EnvironmentRecord , 
+    privateEnv: PrivateEnvironmentRecord
+): FunctionObject {
 
 }
